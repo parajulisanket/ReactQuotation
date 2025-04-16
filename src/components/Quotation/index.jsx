@@ -1,42 +1,56 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import logo from "../../assets/logo.png";
 import { usePDF } from "react-to-pdf";
+import { useNavigate } from "react-router-dom";
 
 const Quotation = () => {
   const targetRef = useRef();
   const { toPDF, targetRef: pdfRef } = usePDF({
     filename: `Quotation.pdf`,
+    page: { width: 794, height: 1123 },
   });
-  const [quotationNumber, setQuotationNumber] = useState("2025105");
-  const [companyName, setCompanyName] = useState("Leo Migrations");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [items, setItems] = useState([
-    {
-      title: "Social Media Designs",
-      price: "12000",
-      description:
-        "Up to 15 Graphics Designs for your social media platforms. Delivery Time: Within 3 hours of order/post. Upto 3 language variations included. Additional order costs Rs 750 per post.",
-    },
-    {
-      title: "Short Reels Editing",
-      price: "32000",
-      description:
-        "Editing, animating the captured reels <30 sec, 4 per week. Delivery Time: Within 24 hours of order/reel. Additional order costs Rs 5000 per video.",
-    },
-  ]);
+  const navigate = useNavigate();
 
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  const [quotationNumber, setQuotationNumber] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [clientId, setClientId] = useState(null);
+  const [clients, setClients] = useState([]);
+  const [customClient, setCustomClient] = useState("");
+  const [quotationDate, setQuotationDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [items, setItems] = useState([]);
+  const [savedItems, setSavedItems] = useState(items);
 
-  const handleQuotationNumberChange = (e) => {
-    setQuotationNumber(e.target.value);
+  const fetchClients = () => {
+    fetch("http://192.168.1.15:8080/api/clients/")
+      .then((res) => res.json())
+      .then((data) => setClients(data))
+      .catch((err) => console.error("Failed to fetch clients", err));
   };
 
+  useEffect(() => {
+    fetch("http://192.168.1.15:8080/api/quotations/generate-number/")
+      .then((res) => res.json())
+      .then((data) => setQuotationNumber(data.quotation_number))
+      .catch((err) => console.error("Failed to fetch quotation number", err));
+
+    fetchClients();
+  }, []);
+
   const handleCompanyNameChange = (e) => {
-    setCompanyName(e.target.value);
+    const value = e.target.value;
+    if (value === "__custom__") {
+      setCompanyName(value);
+      setClientId(null);
+    } else {
+      const selectedClient = clients.find((c) => c.id.toString() === value);
+      if (selectedClient) {
+        setCompanyName(selectedClient.name);
+        setClientId(selectedClient.id);
+        setCustomClient("");
+      }
+    }
   };
 
   const handleItemChange = (index, field, value) => {
@@ -51,6 +65,7 @@ const Quotation = () => {
       {
         title: "",
         price: "",
+        unit: "/m",
         description: "",
       },
     ]);
@@ -60,288 +75,291 @@ const Quotation = () => {
     setItems(items.filter((_, i) => i !== index));
   };
 
+  const handleGenerateQuotation = async () => {
+    const finalClientName =
+      companyName === "__custom__" ? customClient : companyName;
+
+    if (items.length === 0) {
+      alert("Please add at least one service item.");
+      return;
+    }
+
+    const transformedItems = items.map((item) => ({
+      service_name: item.title,
+      cost: item.price,
+      description: item.description,
+      unit: item.unit,
+    }));
+
+    const payload = {
+      quotationNumber,
+      client_name: finalClientName,
+      clientId: clientId,
+      items: transformedItems,
+      date: quotationDate,
+    };
+
+    try {
+      const response = await fetch("http://192.168.1.15:8080/api/quotations/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error("API Error: " + error);
+      }
+
+      const result = await response.json();
+
+      setQuotationNumber(result.quotation_number || quotationNumber);
+      setQuotationDate(result.date || quotationDate);
+      setSavedItems([...items]);
+
+      // Refresh client list in case a new client was created
+      fetchClients();
+
+      alert("Quotation generated!");
+    } catch (error) {
+      console.error("API Error:", error);
+      alert("Failed to create quotation. See console for details.");
+    }
+  };
+
   const calculateTotal = () => {
-    return items.reduce((sum, item) => sum + (parseInt(item.price) || 0), 0);
+    return savedItems.reduce(
+      (sum, item) => sum + (parseInt(item.price) || 0),
+      0
+    );
   };
 
   const handleDownloadPDF = () => {
     toPDF();
   };
 
-  const totalPages = Math.max(2, Math.ceil((items.length - 3) / 5) + 1);
-
-  const getItemsForCurrentPage = () => {
-    if (currentPage === 1) {
-      return items.slice(0, 3);
-    } else {
-      const startIndex = 3 + (currentPage - 2) * 5;
-      return items.slice(startIndex, startIndex + 5);
-    }
-  };
-
   return (
-    <>
-      <div className="max-w-4xl mx-auto p-4 flex justify-end">
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="flex justify-end mb-4">
         <button
           onClick={handleDownloadPDF}
-          className="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 flex items-center gap-2"
+          className="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z"
-              clipRule="evenodd"
-            />
-          </svg>
           Save as PDF
         </button>
       </div>
-      <div ref={pdfRef} className="max-w-4xl mx-auto p-8 bg-white">
-        {currentPage === 1 ? (
-          <>
-            <div className="flex justify-between mb-4">
-              <div>
-                <div className="flex justify-between items-center">
-                  <h1 className="text-4xl font-bold text-blue-700">
-                    Quotation
-                  </h1>
-                </div>
-                <div className="mt-2 text-gray-600">
-                  <p className="font-bold text-gray-500">
-                    Quotation{" "}
-                    <span className="ml-8 text-black">
-                      #
-                      <input
-                        type="text"
-                        value={quotationNumber}
-                        onChange={handleQuotationNumberChange}
-                        className="w-24 bg-transparent text-black outline-none"
-                      />
-                    </span>
-                  </p>
-                  <p className="font-bold text-gray-500">
-                    Quotation Date{" "}
-                    <span className="ml-2 text-black">{currentDate}</span>
-                  </p>
-                </div>
-              </div>
-              <img src={logo} alt="Kantipur Infotech" className="w-48 -mt-8" />
-            </div>
 
-            <div className="bg-gray-100 p-5 rounded-lg mb-8 max-w-[350px]">
-              <h2 className="text-xl font-bold mb-1">QUOTATION TO</h2>
+      <div className="flex gap-4 justify-between">
+        {/* Service Table */}
+        <div className="w-[50%] bg-gray-50 p-4 rounded-lg shadow -ml-10">
+          <h2 className="text-xl font-bold mb-4 text-blue-700">
+            Service Items
+          </h2>
+          <table className="w-full table-auto text-sm border">
+            <thead>
+              <tr className="bg-blue-100 text-left">
+                <th className="p-2 w-40">Title</th>
+                <th className="p-2 w-24">Price</th>
+                <th className="p-2 w-16">Unit</th>
+                <th className="p-2">Description</th>
+                <th className="p-2 w-10"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item, index) => (
+                <tr key={index} className="border-t">
+                  <td className="p-2">
+                    <input
+                      type="text"
+                      value={item.title}
+                      onChange={(e) =>
+                        handleItemChange(index, "title", e.target.value)
+                      }
+                      className="w-full border px-1 py-1 rounded"
+                    />
+                  </td>
+                  <td className="p-2">
+                    <input
+                      type="number"
+                      value={item.price}
+                      onChange={(e) =>
+                        handleItemChange(index, "price", e.target.value)
+                      }
+                      className="w-full border px-1 py-1 rounded"
+                    />
+                  </td>
+                  <td className="p-2">
+                    <select
+                      value={item.unit}
+                      onChange={(e) =>
+                        handleItemChange(index, "unit", e.target.value)
+                      }
+                      className="border px-1 py-1 rounded w-full"
+                    >
+                      <option value="/m">/m</option>
+                      <option value="/y">/y</option>
+                    </select>
+                  </td>
+                  <td className="p-2">
+                    <textarea
+                      value={item.description}
+                      onChange={(e) =>
+                        handleItemChange(index, "description", e.target.value)
+                      }
+                      rows={2}
+                      className="w-full border px-1 py-1 rounded resize-none"
+                      placeholder="Description"
+                    />
+                  </td>
+                  <td className="p-2 text-center">
+                    <button
+                      onClick={() => removeItem(index)}
+                      className="text-red-500 text-xl font-bold hover:text-red-700"
+                      title="Remove"
+                    >
+                      −
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="mt-4 flex justify-between items-center">
+            <button
+              onClick={handleGenerateQuotation}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Generate Quotation
+            </button>
+            <button
+              onClick={addNewItem}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              + Add Item
+            </button>
+          </div>
+        </div>
+
+        {/* Quotation Preview */}
+        <div
+          ref={pdfRef}
+          className="w-[50%] bg-white p-8 rounded shadow"
+          style={{ width: "794px", maxWidth: "100%" }}
+        >
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h1 className="text-4xl font-bold text-blue-700">Quotation</h1>
+              <p className="text-md font-bold text-gray-400 mt-2">
+                Quotation{" "}
+                <span className="text-black px-10">
+                  #{quotationNumber || ""}
+                </span>
+              </p>
+              <p className="text-md font-bold text-gray-400 mt-2 flex items-center gap-2">
+                Quotation Date
+                <input
+                  type="date"
+                  value={quotationDate}
+                  onChange={(e) => setQuotationDate(e.target.value)}
+                  className="text-gray-800 font-semibold  border-gray-300 rounded px-2 py-1"
+                />
+              </p>
+            </div>
+            <img src={logo} alt="Logo" className="w-45 -mt-8" />
+          </div>
+
+          <div className="bg-gray-100 p-4 rounded mb-14 w-[350px]">
+            <h2 className="text-lg font-bold mb-1">QUOTATION TO</h2>
+            <select
+              value={
+                companyName === "__custom__"
+                  ? "__custom__"
+                  : clients.find((c) => c.name === companyName)?.id || ""
+              }
+              onChange={handleCompanyNameChange}
+              className="bg-transparent text-gray-600 text-xl  outline-none w-full  p-2 rounded"
+            >
+              <option value="">-- Select Client --</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name} (ID: {client.id})
+                </option>
+              ))}
+              <option value="__custom__">-- Other (enter manually) --</option>
+            </select>
+
+            {companyName === "__custom__" && (
               <input
                 type="text"
-                value={companyName}
-                onChange={handleCompanyNameChange}
-                className="text-gray-600 font-bold text-xl bg-transparent outline-none w-full"
+                value={customClient}
+                onChange={(e) => setCustomClient(e.target.value)}
+                placeholder="Enter client name"
+                className="mt-3 bg-transparent text-gray-600 text-xl font-semibold outline-none w-full  border-gray-300 p-2 rounded"
               />
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="flex justify-between mb-4">
-              <div>
-                <div className="flex justify-between items-center">
-                  <h1 className="text-4xl font-bold text-blue-700">
-                    Quotation
-                  </h1>
-                </div>
-                <div className="mt-2 text-gray-600">
-                  <p className="font-bold text-gray-500">
-                    Quotation{" "}
-                    <span className="ml-8 text-black">#{quotationNumber}</span>
-                  </p>
-                  <p className="font-bold text-gray-500">
-                    Quotation Date{" "}
-                    <span className="ml-2 text-black">{currentDate}</span>
-                  </p>
-                </div>
-              </div>
-              <img src={logo} alt="Kantipur Infotech" className="w-48 -mt-8" />
-            </div>
-
-            <div className="bg-gray-100 p-5 rounded-lg mb-8 max-w-[350px]">
-              <h2 className="text-xl font-bold mb-1">QUOTATION TO</h2>
-              <p className="text-gray-600 font-bold text-xl">{companyName}</p>
-            </div>
-          </>
-        )}
-
-        <div className="mb-8 space-y-2">
-          <div className="bg-blue-700 text-white grid grid-cols-2 p-4">
-            <div className="font-bold mx-5">DESCRIPTION</div>
-            <div className="text-right font-bold mx-5">SUBTOTAL</div>
+            )}
           </div>
 
-          {getItemsForCurrentPage().map((item, index) => (
-            <div key={index} className="bg-gray-100 border-b py-6 relative">
-              <div className="grid grid-cols-2 mb-2 mx-8">
-                <input
-                  type="text"
-                  value={item.title}
-                  onChange={(e) =>
-                    handleItemChange(
-                      currentPage === 1
-                        ? index
-                        : 3 + (currentPage - 2) * 5 + index,
-                      "title",
-                      e.target.value
-                    )
-                  }
-                  className="font-semibold bg-transparent outline-none text-gray-600"
-                  placeholder="Enter title"
-                />
-                <div className="text-right">
-                  <input
-                    type="text"
-                    value={`Rs ${item.price}/m`}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9]/g, "");
-                      handleItemChange(
-                        currentPage === 1
-                          ? index
-                          : 3 + (currentPage - 2) * 5 + index,
-                        "price",
-                        value
-                      );
-                    }}
-                    className="text-right bg-transparent outline-none w-32 font-semibold text-gray-600"
-                  />
-                </div>
-              </div>
-              <textarea
-                value={item.description}
-                onChange={(e) =>
-                  handleItemChange(
-                    currentPage === 1
-                      ? index
-                      : 3 + (currentPage - 2) * 5 + index,
-                    "description",
-                    e.target.value
-                  )
-                }
-                className="text-gray-600 text-sm bg-transparent outline-none resize-none mx-8 w-[400px]"
-                placeholder="Enter description"
-                rows="2"
-              />
-              <button
-                onClick={() =>
-                  removeItem(
-                    currentPage === 1
-                      ? index
-                      : 3 + (currentPage - 2) * 5 + index
-                  )
-                }
-                className="absolute top-6 right-[-20px] text-red-500 hover:text-red-700"
+          <div>
+            <div className="grid grid-cols-2 bg-blue-700 text-white p-5 font-bold">
+              <div className="pl-4">Description</div>
+              <div className="text-right pr-4">Price</div>
+            </div>
+
+            {savedItems.map((item, index) => (
+              <div
+                key={index}
+                className={`p-4 grid grid-cols-2 bg-gray-100 ${
+                  index === 0 ? "mt-2" : ""
+                }`}
               >
-                ×
-              </button>
-            </div>
-          ))}
-
-          <button
-            onClick={addNewItem}
-            className="mt-4 text-[#2563EB] hover:text-blue-700 flex items-center gap-2"
-          >
-            <span className="text-2xl">+</span> Add Item
-          </button>
-        </div>
-
-        <div className="flex justify-end text-gray-500 mb-8 items-center gap-2">
-          Page
-          <input
-            type="number"
-            value={currentPage}
-            min={1}
-            max={totalPages}
-            onChange={(e) => {
-              const value = parseInt(e.target.value);
-              if (value >= 1 && value <= totalPages) {
-                setCurrentPage(value);
-              }
-            }}
-            className="w-12 text-center border border-gray-300 rounded px-1"
-          />
-          of {totalPages}
-          <div className="flex gap-2 ml-4">
-            <button
-              onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-              className={`px-2 py-1 rounded ${
-                currentPage > 1
-                  ? "text-blue-700 hover:bg-blue-50"
-                  : "text-gray-300"
-              }`}
-            >
-              ←
-            </button>
-            <button
-              onClick={() =>
-                currentPage < totalPages && setCurrentPage(currentPage + 1)
-              }
-              className={`px-2 py-1 rounded ${
-                currentPage < totalPages
-                  ? "text-blue-700 hover:bg-blue-50"
-                  : "text-gray-300"
-              }`}
-            >
-              →
-            </button>
+                <div>
+                  <div className="font-semibold text-gray-700 mb-2">
+                    {item.title}
+                  </div>
+                  <p className="text-sm text-gray-600 max-w-[350px] break-words">
+                    {item.description}
+                  </p>
+                </div>
+                <div className="text-right text-black font-medium">
+                  Rs {parseInt(item.price).toLocaleString()}
+                  {item.unit}
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
 
-        <div className="flex flex-col items-end mt-20 mb-16">
-          <div className="w-64">
-            <div className="flex justify-between mb-4">
-              <div>Subtotal</div>
-              <div>NRs. {calculateTotal().toLocaleString()}/m</div>
-            </div>
-
-            <div className="bg-blue-700 text-white p-4 flex justify-between font-bold">
-              <div>TOTAL</div>
-              <div>NRS. {calculateTotal().toLocaleString()}/M</div>
+          <div className="flex justify-end mt-8">
+            <div className="w-64">
+              <div className="flex justify-between mb-10">
+                <div className="text-gray-600">Subtotal</div>
+                <div className="font-medium">
+                  Rs {calculateTotal().toLocaleString()}
+                </div>
+              </div>
+              <div className="bg-blue-700 text-white p-3 font-bold flex justify-between">
+                <span>TOTAL</span>
+                <span>Rs {calculateTotal().toLocaleString()}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="text-gray-600 mb-8">
-          <input
-            type="text"
-            defaultValue="www.kantipurinfotech.com"
-            className="bg-transparent outline-none w-full"
-          />
-          <input
-            type="text"
-            defaultValue="Email : hello@kantipurinfotech.com"
-            className="bg-transparent outline-none w-full"
-          />
-          <input
-            type="text"
-            defaultValue="Phone : +977 15244366, 9802348565"
-            className="bg-transparent outline-none w-full"
-          />
-          <input
-            type="text"
-            defaultValue="New Baneshwor, Kathmandu, NP"
-            className="bg-transparent outline-none w-full"
-          />
-        </div>
+          <div className="mt-16 text-sm text-gray-700">
+            <p>www.kantipurinfotech.com</p>
+            <p>Email: hello@kantipurinfotech.com</p>
+            <p>Phone: +977 15244366, 9802348565</p>
+            <p>New Baneshwor, Kathmandu, NP</p>
+          </div>
 
-        <div className="mb-4">
-          <h3 className="font-semibold mb-2">TERMS AND CONDITIONS</h3>
-          <textarea
-            defaultValue="This quotation is valid for 7 days only."
-            className="text-gray-600 w-full bg-transparent outline-none resize-none"
-            rows="2"
-          />
+          <div className="mt-4">
+            <h3 className="font-semibold mb-1">TERMS AND CONDITIONS</h3>
+            <p className="text-gray-700 text-sm">
+              This quotation is valid for 7 days only.
+            </p>
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
