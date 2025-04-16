@@ -20,7 +20,7 @@ const AllQuotations = () => {
       ) : (
         <table className="w-full table-auto border shadow rounded bg-white">
           <thead>
-            <tr className="bg-gray-100">
+            <tr className="bg-blue-50">
               <th className="p-2 border">S.N.</th>
               <th className="p-2 border">Quotation ID</th>
               <th className="p-2 border">Quotation #</th>

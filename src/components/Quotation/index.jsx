@@ -170,22 +170,24 @@ const Quotation = () => {
                 <tr key={index} className="border-t">
                   <td className="p-2">
                     <input
+                      placeholder="Item"
                       type="text"
                       value={item.title}
                       onChange={(e) =>
                         handleItemChange(index, "title", e.target.value)
                       }
-                      className="w-full border px-1 py-1 rounded"
+                      className="w-full border px-2 py-1 rounded"
                     />
                   </td>
                   <td className="p-2">
                     <input
+                      placeholder="price"
                       type="number"
                       value={item.price}
                       onChange={(e) =>
                         handleItemChange(index, "price", e.target.value)
                       }
-                      className="w-full border px-1 py-1 rounded"
+                      className="w-full border px-2 py-1 rounded"
                     />
                   </td>
                   <td className="p-2">
@@ -194,7 +196,7 @@ const Quotation = () => {
                       onChange={(e) =>
                         handleItemChange(index, "unit", e.target.value)
                       }
-                      className="border px-1 py-1 rounded w-full"
+                      className="bg-white px-2 py-1 rounded w-full"
                     >
                       <option value="/m">/m</option>
                       <option value="/y">/y</option>
@@ -207,14 +209,14 @@ const Quotation = () => {
                         handleItemChange(index, "description", e.target.value)
                       }
                       rows={2}
-                      className="w-full border px-1 py-1 rounded resize-none"
+                      className="w-full border px-2 py-1 rounded resize-none mt-5"
                       placeholder="Description"
                     />
                   </td>
                   <td className="p-2 text-center">
                     <button
                       onClick={() => removeItem(index)}
-                      className="text-red-500 text-xl font-bold hover:text-red-700"
+                      className="text-red-500 text-3xl font-bold hover:text-red-700"
                       title="Remove"
                     >
                       −
@@ -278,7 +280,7 @@ const Quotation = () => {
                   : clients.find((c) => c.name === companyName)?.id || ""
               }
               onChange={handleCompanyNameChange}
-              className="bg-transparent text-gray-600 text-xl  outline-none w-full  p-2 rounded"
+              className="bg-transparent text-gray-600 text-xl  outline-none w-full  p-2 rounded no-print"
             >
               <option value="">-- Select Client --</option>
               {clients.map((client) => (
