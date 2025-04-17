@@ -23,14 +23,14 @@ const Quotation = () => {
   const [savedItems, setSavedItems] = useState(items);
 
   const fetchClients = () => {
-    fetch("http://192.168.1.15:8080/api/clients/")
+    fetch("https://api-website.kantipurinfotech.com/api/quotations/")
       .then((res) => res.json())
       .then((data) => setClients(data))
       .catch((err) => console.error("Failed to fetch clients", err));
   };
 
   useEffect(() => {
-    fetch("http://192.168.1.15:8080/api/quotations/generate-number/")
+    fetch("https://api-website.kantipurinfotech.com/api/quotations/")
       .then((res) => res.json())
       .then((data) => setQuotationNumber(data.quotation_number))
       .catch((err) => console.error("Failed to fetch quotation number", err));
@@ -100,11 +100,14 @@ const Quotation = () => {
     };
 
     try {
-      const response = await fetch("http://192.168.1.15:8080/api/quotations/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        "https://api-website.kantipurinfotech.com/api/quotations/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!response.ok) {
         const error = await response.text();

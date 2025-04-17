@@ -5,7 +5,7 @@ const AllQuotations = () => {
   const [quotations, setQuotations] = useState([]);
 
   useEffect(() => {
-    fetch("http://192.168.1.15:8080/api/quotations/")
+    fetch("https://api-website.kantipurinfotech.com/api/quotations/")
       .then((res) => res.json())
       .then((data) => setQuotations(data))
       .catch((err) => console.error("Failed to load quotations", err));

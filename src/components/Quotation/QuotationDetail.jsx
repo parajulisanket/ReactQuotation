@@ -7,7 +7,7 @@ const QuotationDetail = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`http://192.168.1.15:8080/api/quotations/${id}/`)
+    fetch(`https://api-website.kantipurinfotech.com/api/quotations/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch quotation.");
         return res.json();
