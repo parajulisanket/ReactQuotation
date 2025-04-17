@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import logo from "../../assets/logo.png";
 import { useNavigate } from "react-router-dom";
+import Select from "react-select";
 
 const Quotation = () => {
   const navigate = useNavigate();
@@ -29,16 +30,27 @@ const Quotation = () => {
     fetchClients();
   }, []);
 
-  const handleCompanyNameChange = (e) => {
-    const value = e.target.value;
-    const selectedClient = clients.find((c) => c.id.toString() === value);
-    if (value === "__custom__") {
+  const clientOptions = [
+    { value: "", label: "-- Select Client --" },
+    ...clients.map((client) => ({ value: client.id, label: client.name })),
+    { value: "__custom__", label: "-- Other (enter manually) --" },
+  ];
+
+  const handleCompanySelect = (selectedOption) => {
+    if (!selectedOption) return;
+
+    if (selectedOption.value === "__custom__") {
       setClientId(null);
       setCompanyName("__custom__");
-    } else if (selectedClient) {
-      setClientId(selectedClient.id);
-      setCompanyName(selectedClient.name);
-      setCustomClient("");
+    } else {
+      setClientId(selectedOption.value);
+      const selectedClient = clients.find(
+        (c) => c.id.toString() === selectedOption.value.toString()
+      );
+      if (selectedClient) {
+        setCompanyName(selectedClient.name);
+        setCustomClient("");
+      }
     }
   };
 
@@ -138,19 +150,12 @@ const Quotation = () => {
               <label className="block text-gray-800 font-medium mb-1 px-1">
                 Quotation To
               </label>
-              <select
-                value={clientId || ""}
-                onChange={handleCompanyNameChange}
-                className="appearance-none border  bg-white shadow-none  px-3 py-2 rounded h-12 w-full"
-              >
-                <option value="__custom__">-- Other (enter manually) --</option>
-                <option value="">-- Select Client --</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}
-                  </option>
-                ))}
-              </select>
+              <Select
+                options={clientOptions}
+                onChange={handleCompanySelect}
+                className="w-full"
+                placeholder="Search or select client"
+              />
               {companyName === "__custom__" && (
                 <input
                   type="text"
@@ -261,7 +266,7 @@ const Quotation = () => {
           </div>
         </div>
 
-        {/* RIGHT SIDE PREVIEW (UNCHANGED) */}
+        {/* RIGHT SIDE PREVIEW */}
         <div
           className="w-[36%] bg-white p-8 -mr-20 rounded shadow flex flex-col justify-between"
           style={{ width: "794px", height: "1123px", maxWidth: "794px" }}
