@@ -170,7 +170,7 @@ const Quotation = () => {
                 type="date"
                 value={quotationDate}
                 onChange={(e) => setQuotationDate(e.target.value)}
-                className="border px-3 py-2 rounded w-44"
+                className="border px-8 py-2 rounded w-44"
               />
             </div>
           </div>
