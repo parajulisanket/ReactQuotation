@@ -427,11 +427,11 @@ const QuotationDetail = () => {
           pdf.setFontSize(18);
           pdf.text(
             `Page ${i} of ${totalPages}`,
-            397,
+            770,
             1110,
             null,
             null,
-            "center"
+            "right"
           );
         }
       })
@@ -487,7 +487,7 @@ const QuotationDetail = () => {
           <h2 className="text-xl font-bold mb-1 text-[#2c2c2c]">
             QUOTATION TO
           </h2>
-          <p className="text-xl text-[#545454] font-semibold">
+          <p className="text-xl text-[#545454] font-semibold ">
             {quotation.client_name || ""}
           </p>
         </div>
@@ -505,14 +505,14 @@ const QuotationDetail = () => {
               style={{ breakInside: "avoid" }}
             >
               <div>
-                <div className="font-semibold text-[#545454] mb-2">
+                <div className="font-semibold text-[14px] text-[#545454] mb-2">
                   {item.service_name}
                 </div>
                 <p className="text-sm text-[#545454] max-w-[350px] break-words">
                   {item.description || "No description"}
                 </p>
               </div>
-              <div className="text-right text-[#2c2c2c] font-medium">
+              <div className="text-right text-[14px] text-[#2c2c2c] font-medium">
                 Rs {parseInt(item.cost || 0).toLocaleString()}{" "}
                 {getLabelFromValue(item.duration)}
               </div>
@@ -524,8 +524,8 @@ const QuotationDetail = () => {
           <div className="flex justify-end mt-10">
             <div className="w-64">
               <div className="flex justify-between mb-6">
-                <div className="text-[#2c2c2c]">Subtotal</div>
-                <div className="font-normal">
+                <div className="text-[#2c2c2c]  text-[14px]">Subtotal</div>
+                <div className="font-medium">
                   NRs. {calculateTotal().toLocaleString()} {unitLabel}
                 </div>
               </div>
