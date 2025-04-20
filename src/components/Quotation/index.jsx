@@ -6,7 +6,7 @@ import Select from "react-select";
 const Quotation = () => {
   const navigate = useNavigate();
 
-  // use states 
+  // use states
   const [quotationNumber, setQuotationNumber] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [clientId, setClientId] = useState(null);
@@ -121,7 +121,7 @@ const Quotation = () => {
       titleID: null,
       customTitle: "",
       price: "",
-      unit: "Monthly",
+      unit: "/m",
       description: "",
     };
     const updatedItems = [...items, newItem];
@@ -204,14 +204,14 @@ const Quotation = () => {
       <div className="flex gap-4 justify-between items-start">
         {/* LEFT SIDE */}
         <div className="w-[64%] bg-gray-50 -ml-20 p-4 rounded-lg shadow">
-          <h2 className="text-xl font-bold mb-4 text-blue-700">
+          <h2 className="text-xl font-bold mb-4 text-[#034cc6]">
             Service Items
           </h2>
 
           {/* Client and Date */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-gray-800 font-medium mb-1 px-1">
+              <label className="block text-[#2c2c2c] font-medium mb-1 px-1">
                 Quotation To
               </label>
               <Select
@@ -367,7 +367,7 @@ const Quotation = () => {
           <div className="flex justify-between mt-4">
             <button
               onClick={handleGenerateQuotation}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
+              className="bg-[#034cc6] text-white px-4 py-2 rounded"
             >
               Generate Quotation
             </button>
@@ -390,16 +390,16 @@ const Quotation = () => {
             <div className="flex-grow overflow-y-auto pr-2">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h1 className="text-4xl font-bold text-blue-700">
+                  <h1 className="text-4xl font-bold text-[#034cc6]">
                     Quotation
                   </h1>
-                  <p className="text-md font-bold text-gray-400 mt-2">
+                  <p className="text-md font-bold text-[#969696] mt-2">
                     Quotation{" "}
                     <span className="text-black px-10">
                       #{quotationNumber || ""}
                     </span>
                   </p>
-                  <p className="text-md font-bold text-gray-400 mt-2 flex items-center gap-2">
+                  <p className="text-md font-bold text-[#969696] mt-2 flex items-center gap-2">
                     Quotation Date
                     <input
                       type="text"
@@ -413,38 +413,40 @@ const Quotation = () => {
                       readOnly
                       className="text-gray-800 font-semibold border-gray-300 rounded px-2 py-1"
                     />
-                  </p>
+                  </p>  
                 </div>
                 <img src={logo} alt="Logo" className="w-45 -mt-8" />
               </div>
 
-              <div className="bg-gray-100 p-4 rounded mb-6 w-[350px]">
-                <h2 className="text-lg font-bold mb-1">QUOTATION TO</h2>
-                <p className="text-xl text-gray-700 font-semibold">
+              <div className="bg-[#f4f6fd] p-4 rounded mb-6 w-[350px]">
+                <h2 className="text-lg font-bold mb-1 text-[#2c2c2c]">
+                  QUOTATION TO
+                </h2>
+                <p className="text-xl text-[#545454] font-semibold">
                   {companyName === "__custom__"
                     ? customClient
                     : companyName || ""}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 bg-blue-700 text-white p-5 font-bold mb-2">
+              <div className="grid grid-cols-2 bg-[#034cc6] text-white p-5 font-bold mb-2">
                 <div className="pl-4">DESCRIPTION</div>
                 <div className="text-right pr-4">SUBTOTAL</div>
               </div>
 
               {paginatedItems.map((item, index) => (
-                <div key={index} className="p-4 grid grid-cols-2 bg-gray-100 ">
+                <div key={index} className="p-4 grid grid-cols-2 bg-[#f6f8fc] ">
                   <div>
-                    <div className="font-semibold text-gray-700 mb-2">
+                    <div className="font-semibold text-[#545454] mb-2">
                       {item.title === "__custom__"
                         ? item.customTitle
                         : item.title}
                     </div>
-                    <p className="text-sm text-gray-600 max-w-[350px] break-words">
+                    <p className="text-sm text-[#545454] max-w-[350px] break-words">
                       {item.description}
                     </p>
                   </div>
-                  <div className="text-right text-black font-medium">
+                  <div className="text-right text-[#2c2c2c] font-medium">
                     Rs {parseInt(item.price || 0).toLocaleString()}
                     {item.unit.toLowerCase()}
                   </div>
@@ -454,12 +456,12 @@ const Quotation = () => {
               <div className="flex justify-end mt-6">
                 <div className="w-64">
                   <div className="flex justify-between mb-6">
-                    <div className="text-gray-600">Subtotal</div>
+                    <div className="text-[#2c2c2c]">Subtotal</div>
                     <div className="font-normal">
                       NRs. {calculateTotal().toLocaleString()} {unitLabel}
                     </div>
                   </div>
-                  <div className="bg-blue-700 text-white p-3 font-bold flex justify-between">
+                  <div className="bg-[#034cc6] text-white p-3 font-bold flex justify-between">
                     <span>TOTAL</span>
                     <span>
                       NRs. {calculateTotal().toLocaleString()}{" "}
@@ -472,7 +474,7 @@ const Quotation = () => {
 
             {/* Footer and Pagination*/}
             <div className="mt-auto pt-4">
-              <div className="text-sm text-gray-800 mb-4 leading-relaxed">
+              <div className="text-sm text-[#545454] mb-4 leading-relaxed">
                 <div className="mb-2">
                   <p>www.kantipurinfotech.com</p>
                   <p>Email : hello@kantipurinfotech.com</p>
@@ -480,10 +482,10 @@ const Quotation = () => {
                   <p>New Baneshwor, Kathmandu, NP</p>
                 </div>
                 <div>
-                  <h3 className="font-semibold mt-6 text-black uppercase text-[13px] tracking-wide">
+                  <h3 className="font-semibold mt-6 text-[#2c2c2c] uppercase text-[13px] tracking-wide">
                     Terms and Conditions
                   </h3>
-                  <p className="text-gray-800 text-sm">
+                  <p className="text-[#545454]text-sm">
                     This quotation is valid for 7 days only.
                   </p>
                 </div>
@@ -495,7 +497,7 @@ const Quotation = () => {
                     setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
                   disabled={currentPage === 1}
-                  className="px-4 py-1 bg-blue-700 text-white rounded cursor-pointer"
+                  className="px-4 py-1 bg-[#034cc6] text-white rounded cursor-pointer"
                 >
                   Prev
                 </button>
@@ -513,7 +515,7 @@ const Quotation = () => {
                   disabled={
                     currentPage >= Math.ceil(items.length / ITEMS_PER_PAGE)
                   }
-                  className="px-4 py-1 bg-blue-700 text-white rounded cursor-pointer"
+                  className="px-4 py-1 bg-[#034cc6] text-white rounded cursor-pointer"
                 >
                   Next
                 </button>
